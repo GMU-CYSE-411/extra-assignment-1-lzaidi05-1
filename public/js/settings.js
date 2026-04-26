@@ -10,10 +10,20 @@ async function loadSettings(userId) {
   form.elements.theme.value = settings.theme;
   form.elements.statusMessage.value = settings.statusMessage;
   form.elements.emailOptIn.checked = Boolean(settings.emailOptIn);
-  document.getElementById("status-preview").innerHTML = `
-    <p><strong>${settings.displayName}</strong></p>
-    <p>${settings.statusMessage}</p>
-  `;
+
+  const preview = document.getElementById("status-preview");
+  preview.innerHTML = "";
+
+  const namePara = document.createElement("p");
+  const strong = document.createElement("strong");
+  strong.textContent = settings.displayName;
+  namePara.appendChild(strong);
+
+  const statusPara = document.createElement("p");
+  statusPara.textContent = settings.statusMessage;
+
+  preview.appendChild(namePara);
+  preview.appendChild(statusPara);
 
   writeJson("settings-output", settings);
 }
