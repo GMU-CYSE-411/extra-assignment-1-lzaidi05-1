@@ -29,7 +29,6 @@ async function createApp() {
   app.use("/css", express.static(path.join(__dirname, "..", "public", "css")));
   app.use("/js", express.static(path.join(__dirname, "..", "public", "js")));
 
-  // Session middleware — unchanged, already uses parameterized query
   app.use(async (request, response, next) => {
     const sessionId = request.cookies.sid;
 
@@ -75,7 +74,6 @@ async function createApp() {
     next();
   }
 
-
   function requireAdmin(request, response, next) {
     if (!request.currentUser) {
       response.status(401).json({ error: "Authentication required." });
@@ -98,7 +96,6 @@ async function createApp() {
     response.json({ user: request.currentUser });
   });
 
-
   app.post("/api/login", async (request, response) => {
     const username = String(request.body.username || "");
     const password = String(request.body.password || "");
@@ -113,10 +110,8 @@ async function createApp() {
       return;
     }
 
-    // Always create a brand-new session ID — never trust the one the browser sent.
     const sessionId = createSessionId();
 
-    // Clean up any old sessions for this user to avoid stale session accumulation.
     await db.run("DELETE FROM sessions WHERE user_id = ?", [user.id]);
     await db.run(
       "INSERT INTO sessions (id, user_id, created_at) VALUES (?, ?, ?)",
@@ -125,8 +120,8 @@ async function createApp() {
 
     response.cookie("sid", sessionId, {
       path: "/",
-      httpOnly: true,   // JS cannot read this cookie
-      sameSite: "lax"   // Not sent on cross-origin POST (CSRF layer)
+      httpOnly: true,
+      sameSite: "lax"
     });
 
     response.json({
@@ -152,7 +147,6 @@ async function createApp() {
     const requestedOwnerId = Number(request.query.ownerId);
     const isAdmin = request.currentUser.role === "admin";
 
-    // Non-admin users can only fetch their own notes.
     const ownerId =
       isAdmin && requestedOwnerId ? requestedOwnerId : request.currentUser.id;
 
@@ -198,6 +192,7 @@ async function createApp() {
     );
 
     response.status(201).json({ ok: true, noteId: result.lastID });
+  });
 
   app.get("/api/settings", requireAuth, async (request, response) => {
     const requestedUserId = Number(request.query.userId);
@@ -226,7 +221,6 @@ async function createApp() {
     response.json({ settings });
   });
 
-
   app.post("/api/settings", requireAuth, async (request, response) => {
     const requestedUserId = Number(request.body.userId);
     const isAdmin = request.currentUser.role === "admin";
@@ -248,7 +242,6 @@ async function createApp() {
     response.json({ ok: true });
   });
 
-  // This route already derives userId from the session — no change needed.
   app.get("/api/settings/toggle-email", requireAuth, async (request, response) => {
     const enabled = request.query.enabled === "1" ? 1 : 0;
 
